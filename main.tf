@@ -1,23 +1,20 @@
-# We use 'data' instead of 'resource' because the RG already exists
+# 1. REFERENCE EXISTING INFRASTRUCTURE
 data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
 
-# Network
-resource "azurerm_virtual_network" "vnet" {
+data "azurerm_virtual_network" "vnet" {
   name                = "epic-vnet"
-  address_space       = ["10.0.0.0/16"]
-  location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-resource "azurerm_subnet" "subnet" {
+data "azurerm_subnet" "subnet" {
   name                 = "epic-subnet"
   resource_group_name  = data.azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
 }
 
+# 2. PUBLIC IP (Using Standard SKU as required by newer Azure rules)
 resource "azurerm_public_ip" "pip" {
   name                = "epic-ip"
   location            = data.azurerm_resource_group.rg.location
@@ -26,6 +23,7 @@ resource "azurerm_public_ip" "pip" {
   sku                 = "Standard"
 }
 
+# 3. NETWORK INTERFACE
 resource "azurerm_network_interface" "nic" {
   name                = "epic-nic"
   location            = data.azurerm_resource_group.rg.location
@@ -33,13 +31,13 @@ resource "azurerm_network_interface" "nic" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet.id
+    subnet_id                     = data.azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.pip.id
   }
 }
 
-# Ubuntu VM
+# 4. VIRTUAL MACHINE
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = "EpicBook-VM"
   resource_group_name = data.azurerm_resource_group.rg.name
@@ -66,9 +64,13 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-# MySQL PaaS
+# 5. MYSQL DATABASE 
 resource "random_id" "id" {
   byte_length = 4
+  keepers = {
+    # Forces a new name if the state is lost, preventing "Already Exists" errors
+    ami_id = 1 
+  }
 }
 
 resource "random_password" "db_pass" {
@@ -84,6 +86,7 @@ resource "azurerm_mysql_flexible_server" "db" {
   administrator_password = random_password.db_pass.result
   sku_name               = "B_Standard_B1ms"
   version                = "8.0.21"
+  zone                   = "1"
 }
 
 resource "azurerm_mysql_flexible_server_firewall_rule" "fw" {
