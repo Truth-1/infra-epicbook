@@ -5,11 +5,12 @@ terraform {
       version = "~> 3.0"
     }
   }
-
-  # THIS IS THE MISSING PIECE
-  backend "azurerm" {} 
+  backend "azurerm" {}
 }
 
 provider "azurerm" {
   features {}
+  # These two lines help bypass the "JSON input" and "Cache" errors
+  resource_provider_registrations = "none"
+  skip_provider_registration      = true
 }
