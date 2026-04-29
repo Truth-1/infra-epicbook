@@ -19,7 +19,7 @@ data "azurerm_public_ip" "pip" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-# 2. NETWORK INTERFACE (Points to existing Subnet and IP)
+# 2. NETWORK INTERFACE
 resource "azurerm_network_interface" "nic" {
   name                = "epic-nic"
   location            = data.azurerm_resource_group.rg.location
@@ -33,12 +33,12 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
-# 3. VIRTUAL MACHINE
+# 3. VIRTUAL MACHINE (Updated to D2s_v3 for reliability)
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = "EpicBook-VM"
   resource_group_name = data.azurerm_resource_group.rg.name
   location            = data.azurerm_resource_group.rg.location
-  size                = "Standard_D2s_v3S"
+  size                = "Standard_D2s_v3"
   admin_username      = var.vm_user
   network_interface_ids = [azurerm_network_interface.nic.id]
 
@@ -60,22 +60,13 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-# 4. MYSQL DATABASE 
-resource "random_id" "id" {
-  byte_length = 4
-}
-
-resource "random_password" "db_pass" {
-  length  = 16
-  special = true
-}
-
+# 4. MYSQL DATABASE (Fixed name to prevent naming conflicts)
 resource "azurerm_mysql_flexible_server" "db" {
-  name                   = "epicbook-db-${random_id.id.hex}"
+  name                   = "epicbook-db-final-ekene"
   resource_group_name    = data.azurerm_resource_group.rg.name
   location               = data.azurerm_resource_group.rg.location
   administrator_login    = "dbadmin"
-  administrator_password = random_password.db_pass.result
+  administrator_password = "Password1234!" 
   sku_name               = "B_Standard_B1ms"
   version                = "8.0.21"
   zone                   = "1"
