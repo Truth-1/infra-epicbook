@@ -23,6 +23,7 @@ resource "azurerm_public_ip" "pip" {
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_network_interface" "nic" {
@@ -43,7 +44,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "EpicBook-VM"
   resource_group_name = data.azurerm_resource_group.rg.name
   location            = data.azurerm_resource_group.rg.location
-  size                = "Standard_B1s"
+  size                = "Standard_D2s_v3"
   admin_username      = var.vm_user
   network_interface_ids = [azurerm_network_interface.nic.id]
 
