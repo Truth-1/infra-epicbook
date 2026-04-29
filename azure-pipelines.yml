@@ -6,9 +6,6 @@ pool:
 
 variables:
   serviceConnection: 'Epic-connection'
-  # Make sure these values match your Azure environment
-  resourceGroup: 'EpicBook-RG'
-  location: 'Canada Central'
 
 steps:
 - task: TerraformInstaller@0
@@ -22,10 +19,9 @@ steps:
     provider: 'azurerm'
     command: 'init'
     backendServiceArm: '$(serviceConnection)'
-    # This section manages your state file. 
-    # If this fails, ensure the Storage Account name is unique (lowercase/numbers only)
-    backendAzureRmResourceGroupName: '$(resourceGroup)'
-    backendAzureRmStorageAccountName: 'epicstatetf$(Build.BuildId)' 
+    # These must match exactly what you just created in your terminal
+    backendAzureRmResourceGroupName: 'EpicBook-RG'
+    backendAzureRmStorageAccountName: 'ekenedevstate'
     backendAzureRmContainerName: 'tfstate'
     backendAzureRmKey: 'terraform.tfstate'
 
