@@ -1,7 +1,7 @@
 output "app_public_ip" {
-  value = azurerm_public_ip.pip.ip_address
+  value = data.azurerm_public_ip.pip.ip_address
 }
 
 output "mysql_fqdn" {
-  value = "your-db-host-here" # Replace with actual DB output if using PaaS
+  value = azurerm_mysql_flexible_server.db.fqdn
 }
