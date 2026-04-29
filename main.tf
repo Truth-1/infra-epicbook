@@ -1,4 +1,4 @@
-# 1. REFERENCE EXISTING INFRASTRUCTURE
+# 1. REFERENCE EXISTING INFRASTRUCTURE (Data Sources)
 data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
@@ -14,16 +14,12 @@ data "azurerm_subnet" "subnet" {
   virtual_network_name = data.azurerm_virtual_network.vnet.name
 }
 
-# 2. PUBLIC IP (Using Standard SKU as required by newer Azure rules)
-resource "azurerm_public_ip" "pip" {
+data "azurerm_public_ip" "pip" {
   name                = "epic-ip"
-  location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
 }
 
-# 3. NETWORK INTERFACE
+# 2. NETWORK INTERFACE (Points to existing Subnet and IP)
 resource "azurerm_network_interface" "nic" {
   name                = "epic-nic"
   location            = data.azurerm_resource_group.rg.location
@@ -33,16 +29,16 @@ resource "azurerm_network_interface" "nic" {
     name                          = "internal"
     subnet_id                     = data.azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.pip.id
+    public_ip_address_id          = data.azurerm_public_ip.pip.id
   }
 }
 
-# 4. VIRTUAL MACHINE
+# 3. VIRTUAL MACHINE
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = "EpicBook-VM"
   resource_group_name = data.azurerm_resource_group.rg.name
   location            = data.azurerm_resource_group.rg.location
-  size                = "Standard_D2s_v3"
+  size                = "Standard_D2s_v3S"
   admin_username      = var.vm_user
   network_interface_ids = [azurerm_network_interface.nic.id]
 
@@ -64,13 +60,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-# 5. MYSQL DATABASE 
+# 4. MYSQL DATABASE 
 resource "random_id" "id" {
   byte_length = 4
-  keepers = {
-    # Forces a new name if the state is lost, preventing "Already Exists" errors
-    ami_id = 1 
-  }
 }
 
 resource "random_password" "db_pass" {
