@@ -1,0 +1,44 @@
+trigger:
+- main
+
+pool:
+  name: 'My-React'
+
+variables:
+  serviceConnection: 'Epic-connection'
+  # Make sure these values match your Azure environment
+  resourceGroup: 'EpicBook-RG'
+  location: 'Canada Central'
+
+steps:
+- task: TerraformInstaller@0
+  displayName: 'Install Terraform'
+  inputs:
+    terraformVersion: 'latest'
+
+- task: TerraformTaskV4@4
+  displayName: 'Terraform Init'
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    backendServiceArm: '$(serviceConnection)'
+    # This section manages your state file. 
+    # If this fails, ensure the Storage Account name is unique (lowercase/numbers only)
+    backendAzureRmResourceGroupName: '$(resourceGroup)'
+    backendAzureRmStorageAccountName: 'epicstatetf$(Build.BuildId)' 
+    backendAzureRmContainerName: 'tfstate'
+    backendAzureRmKey: 'terraform.tfstate'
+
+- task: TerraformTaskV4@4
+  displayName: 'Terraform Plan'
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    environmentServiceNameAzureRM: '$(serviceConnection)'
+
+- task: TerraformTaskV4@4
+  displayName: 'Terraform Apply'
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    environmentServiceNameAzureRM: '$(serviceConnection)'
