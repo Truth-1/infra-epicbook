@@ -83,7 +83,8 @@ resource "azurerm_mysql_flexible_server" "db" {
 
 resource "azurerm_mysql_flexible_server_firewall_rule" "fw" {
   name                = "AllowAll"
-  server_id           = azurerm_mysql_flexible_server.db.id
+  resource_group_name = azurerm_resource_group.rg.name
+  server_name         = azurerm_mysql_flexible_server.db.name
   start_ip_address    = "0.0.0.0"
   end_ip_address      = "255.255.255.255"
 }
