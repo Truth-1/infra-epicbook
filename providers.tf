@@ -5,6 +5,9 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  # THIS IS THE MISSING PIECE
+  backend "azurerm" {} 
 }
 
 provider "azurerm" {
